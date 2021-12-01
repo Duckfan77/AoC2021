@@ -60,9 +60,7 @@ fn part2_iter(text: &str) {
         text.lines()
             .map(|x| x.parse::<i32>().unwrap_or(0))
             .tuple_windows()
-            .map(|(x, y, z)| x + y + z)
-            .tuple_windows()
-            .filter(|(a, b)| b > a)
+            .filter(|(a, _, _, b)| b > a)
             .count()
     )
 }
