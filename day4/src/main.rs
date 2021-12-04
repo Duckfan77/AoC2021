@@ -22,6 +22,7 @@ fn part1(text: &str) {
             board.mark(number);
 
             if board.won() {
+                //sum all un-marked numbers
                 let val = board
                     .rows
                     .iter()
@@ -86,6 +87,7 @@ fn parse(text: &str) -> (Vec<i32>, Vec<Board>) {
 
 #[derive(Clone)]
 struct Board {
+    //Keep rows and cols separate, to make it easy to iterate over all unmarked cells, without duplication
     rows: Vec<HashMap<i32, bool>>,
     cols: Vec<HashMap<i32, bool>>,
 }
