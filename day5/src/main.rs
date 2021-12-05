@@ -74,48 +74,33 @@ impl Line {
     }
 
     fn points(&self) -> Vec<(i32, i32)> {
-        if self.horiz() {
-            let x = self.x1;
-            (i32::min(self.y1, self.y2)..=i32::max(self.y1, self.y2))
-                .into_iter()
-                .map(|y| (x, y))
-                .collect()
-        } else if self.vert() {
-            let y = self.y1;
-            (i32::min(self.x1, self.x2)..=i32::max(self.x1, self.x2))
-                .into_iter()
-                .map(|x| (x, y))
-                .collect()
+        let mut points = Vec::new();
+
+        let yadjust = if self.y1 == self.y2 {
+            0
+        } else if self.y1 < self.y2 {
+            1
         } else {
-            let points = if self.x1 < self.x2 {
-                let yadjust = if self.y1 < self.y2 { 1 } else { -1 };
-                let mut y = self.y1;
+            -1
+        };
+        let xadjust = if self.x1 == self.x2 {
+            0
+        } else if self.x1 < self.x2 {
+            1
+        } else {
+            -1
+        };
+        let mut x = self.x1;
+        let mut y = self.y1;
 
-                (self.x1..=self.x2)
-                    .into_iter()
-                    .map(|x| {
-                        y += yadjust;
-                        (x, y - yadjust)
-                    })
-                    .collect()
-            } else {
-                //println!("{} {} {} {}", self.x1, self.y1, self.x2, self.y2);
-                let yadjust = if self.y1 > self.y2 { 1 } else { -1 };
-                let mut y = self.y2;
-
-                (self.x2..=self.x1)
-                    .into_iter()
-                    .map(|x| {
-                        y += yadjust;
-                        //println!("{}, {}", x, y);
-                        (x, y - yadjust)
-                    })
-                    .collect()
-            };
-
-            //println!("{:?}", points);
-
-            points
+        //Go until both are at the end point
+        while x != self.x2 || y != self.y2 {
+            points.push((x, y));
+            x += xadjust;
+            y += yadjust;
         }
+        points.push((x, y));
+
+        points
     }
 }
