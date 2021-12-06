@@ -47,3 +47,28 @@ fn step(fish: &mut VecDeque<i64>) {
     fish[6] += new;
     fish.push_back(new);
 }
+
+fn step_old(fish: &mut Vec<i32>) {
+    let mut new = Vec::new();
+
+    for i in fish.iter_mut() {
+        if *i == 0 {
+            *i = 6;
+            new.push(8);
+        } else {
+            *i -= 1;
+        }
+    }
+
+    fish.append(&mut new);
+}
+
+fn part1_old(text: &str) {
+    let mut fish = text.split(',').map(|x| x.parse().unwrap()).collect();
+
+    for _ in 0..80 {
+        step_old(&mut fish);
+    }
+
+    println!("{}", fish.len())
+}
