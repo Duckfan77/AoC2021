@@ -21,14 +21,12 @@ fn part1(text: &str) {
     let min = pos.iter().min().unwrap();
     let max = pos.iter().max().unwrap();
 
-    let mut best_i = *min;
     let mut best_diff = i32::MAX;
     for i in *min..*max {
         let diff = pos.iter().map(|x| i32::abs(x - i)).sum::<i32>();
 
         if diff < best_diff {
             best_diff = diff;
-            best_i = i;
         }
     }
 
@@ -41,7 +39,6 @@ fn part2(text: &str) {
     let min = pos.iter().min().unwrap();
     let max = pos.iter().max().unwrap();
 
-    let mut best_i = *min;
     let mut best_diff = i32::MAX;
     for i in *min..*max {
         let diff = pos
@@ -55,7 +52,6 @@ fn part2(text: &str) {
 
         if diff < best_diff {
             best_diff = diff;
-            best_i = i;
         }
     }
 
