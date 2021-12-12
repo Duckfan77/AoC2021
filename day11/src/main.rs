@@ -65,6 +65,7 @@ fn step(grid: &mut HashMap<(isize, isize), u8>) -> i32 {
         }
     }
 
+    //Handle all inner points for a first pass
     for x in 0..10 {
         for y in 0..10 {
             if *grid.get(&(x, y)).unwrap() > 9 {
@@ -88,6 +89,7 @@ fn step(grid: &mut HashMap<(isize, isize), u8>) -> i32 {
         }
     }
 
+    //Check any that got an extra boost from being adjacent to a flash
     while !to_check.is_empty() {
         let (x, y) = to_check.pop().unwrap();
 
@@ -95,9 +97,12 @@ fn step(grid: &mut HashMap<(isize, isize), u8>) -> i32 {
             //println!("Chain Flash Found at {},{}", x, y);
             // only keep going if this is a new value being flashed
             if flash.insert((x, y), ()) == None {
+                // Get all adjacent
                 for dx in -1..=1 {
                     for dy in -1..=1 {
+                        // don't get this point
                         if dx != 0 || dy != 0 {
+                            // increment adjacent, and add to the list of points to check
                             match grid.get_mut(&(x + dx, y + dy)) {
                                 Some(v) => {
                                     *v += 1;
