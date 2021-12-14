@@ -18,22 +18,32 @@ fn main() {
 
 fn part1(text: &str) {
     let (base, rulestxt) = text.split_once("\n\n").unwrap();
-    let mut base = String::from(base);
+    let init = base.chars().collect::<Vec<char>>();
     let mut rules = HashMap::new();
 
     for line in rulestxt.lines() {
         let chars = line.chars().collect::<Vec<char>>();
-        rules.insert((chars[0], chars[1]), chars[6]);
+        rules.insert(
+            (chars[0], chars[1]),
+            ((chars[0], chars[6]), (chars[6], chars[1]), chars[6]),
+        );
     }
 
-    for _ in 0..10 {
-        base = step(&rules, base);
+    // Build base so that it contains each pair of the input
+    let mut base: HashMap<(char, char), u128> = HashMap::new();
+
+    for pair in init.windows(2) {
+        *base.entry((pair[0], pair[1])).or_insert(0) += 1;
     }
 
     let mut counts = HashMap::new();
+    for c in init {
+        *counts.entry(c).or_insert(0) += 1;
+    }
 
-    for c in base.chars() {
-        *counts.entry(c).or_insert(0) += 1
+    for _i in 0..10 {
+        //println!("{}", _i);
+        base = step(&rules, base, &mut counts);
     }
 
     let max = counts.values().max().unwrap();
@@ -44,23 +54,32 @@ fn part1(text: &str) {
 
 fn part2(text: &str) {
     let (base, rulestxt) = text.split_once("\n\n").unwrap();
-    let mut base = String::from(base);
+    let init = base.chars().collect::<Vec<char>>();
     let mut rules = HashMap::new();
 
     for line in rulestxt.lines() {
         let chars = line.chars().collect::<Vec<char>>();
-        rules.insert((chars[0], chars[1]), chars[6]);
+        rules.insert(
+            (chars[0], chars[1]),
+            ((chars[0], chars[6]), (chars[6], chars[1]), chars[6]),
+        );
     }
 
-    for _i in 0..40 {
-        println!("{}", _i);
-        base = step(&rules, base);
+    // Build base so that it contains each pair of the input
+    let mut base: HashMap<(char, char), u128> = HashMap::new();
+
+    for pair in init.windows(2) {
+        *base.entry((pair[0], pair[1])).or_insert(0) += 1;
     }
 
     let mut counts = HashMap::new();
+    for c in init {
+        *counts.entry(c).or_insert(0) += 1;
+    }
 
-    for c in base.chars() {
-        *counts.entry(c).or_insert(0) += 1
+    for _i in 0..40 {
+        //println!("{}", _i);
+        base = step(&rules, base, &mut counts);
     }
 
     let max = counts.values().max().unwrap();
@@ -69,24 +88,18 @@ fn part2(text: &str) {
     println!("{}", max - min);
 }
 
-fn step(rules: &HashMap<(char, char), char>, mut base: String) -> String {
-    let mut chars = base.drain(..);
-    let mut out = String::new();
-
-    let mut c1 = chars.next().unwrap();
-    for c2 in chars {
-        match rules.get(&(c1, c2)) {
-            Some(c) => {
-                out.push(c1);
-                out.push(*c)
-            }
-
-            None => out.push(c1),
-        }
-        c1 = c2;
+fn step(
+    rules: &HashMap<(char, char), ((char, char), (char, char), char)>,
+    base: HashMap<(char, char), u128>,
+    counts: &mut HashMap<char, u128>,
+) -> HashMap<(char, char), u128> {
+    let mut out = HashMap::new();
+    for (key, value) in base.iter() {
+        let (p1, p2, c) = rules.get(key).unwrap();
+        *out.entry(*p1).or_insert(0) += value;
+        *out.entry(*p2).or_insert(0) += value;
+        *counts.entry(*c).or_insert(0) += value;
     }
-
-    out.push(c1);
 
     out
 }
