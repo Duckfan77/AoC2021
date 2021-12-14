@@ -89,6 +89,7 @@ fn part2(text: &str) {
 }
 
 fn step(
+    //keyed off the pair for the rule, value is (first pair), (second pair), (inserted char)
     rules: &HashMap<(char, char), ((char, char), (char, char), char)>,
     base: HashMap<(char, char), u128>,
     counts: &mut HashMap<char, u128>,
