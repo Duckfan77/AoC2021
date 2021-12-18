@@ -17,17 +17,8 @@ fn main() {
 }
 
 fn part1(text: &str) {
-    let p = SnailfishNumber {
-        v1: Value::Pair(Box::new(SnailfishNumber {
-            v1: Value::Val(9),
-            v2: Value::Val(1),
-        })),
-        v2: Value::Pair(Box::new(SnailfishNumber {
-            v1: Value::Val(1),
-            v2: Value::Val(9),
-        })),
-    };
-    println!("{:?}", p.magnitude());
+    let p = SnailfishNumber::from_slice(&text.chars().collect::<Vec<char>>());
+    println!("{:?}", p);
 }
 
 fn part2(text: &str) {}
@@ -143,5 +134,49 @@ impl SnailfishNumber {
         };
 
         3 * left + 2 * right
+    }
+
+    fn from_slice(input: &[char]) -> Self {
+        let mut s1 = input;
+        let mut s2 = input;
+        let mut stack = Vec::new();
+        for (i, c) in input[1..].iter().enumerate() {
+            match c {
+                '[' => {
+                    stack.push(i);
+                }
+
+                ']' => {
+                    stack.pop();
+                }
+
+                ',' => {
+                    //delimeter between two sides of pair
+                    if stack.is_empty() {
+                        //use i + 1, because offset 1 from the start of the string
+                        s1 = &input[1..i + 1];
+                        //start right after this, and don't include trailing ] used to close pair
+                        s2 = &input[i + 2..input.len() - 1];
+                        break;
+                    }
+                }
+
+                _ => (),
+            };
+        }
+
+        let v1 = if s1[0].is_digit(10) {
+            Value::Val(s1.iter().collect::<String>().parse().unwrap())
+        } else {
+            Value::Pair(Box::new(Self::from_slice(s1)))
+        };
+
+        let v2 = if s2[0].is_digit(10) {
+            Value::Val(s2.iter().collect::<String>().parse().unwrap())
+        } else {
+            Value::Pair(Box::new(Self::from_slice(s2)))
+        };
+
+        Self { v1, v2 }
     }
 }
