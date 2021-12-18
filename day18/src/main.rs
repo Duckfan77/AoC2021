@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::fs::File;
 use std::io::prelude::*;
 use std::ops::Add;
@@ -30,7 +31,22 @@ fn part1(text: &str) {
     println!("{}", p.magnitude());
 }
 
-fn part2(_text: &str) {}
+fn part2(text: &str) {
+    let mut input: Vec<SnailfishNumber> = text
+        .lines()
+        .map(|l| SnailfishNumber::from_slice(&l.chars().collect::<Vec<char>>()))
+        .collect();
+
+    println!(
+        "{}",
+        input
+            .drain(..)
+            .permutations(2)
+            .map(|p| (p[0].clone() + p[1].clone()).magnitude())
+            .max()
+            .unwrap()
+    );
+}
 
 #[derive(Debug, Clone)]
 struct SnailfishNumber {
