@@ -17,11 +17,20 @@ fn main() {
 }
 
 fn part1(text: &str) {
-    let p = SnailfishNumber::from_slice(&text.chars().collect::<Vec<char>>());
-    println!("{:?}", p);
+    let mut input: Vec<SnailfishNumber> = text
+        .lines()
+        .map(|l| SnailfishNumber::from_slice(&l.chars().collect::<Vec<char>>()))
+        .collect();
+    let mut p = input[0].clone();
+    for num in input.drain(1..) {
+        //println!("Do Sum");
+        p = p + num;
+    }
+
+    println!("{}", p.magnitude());
 }
 
-fn part2(text: &str) {}
+fn part2(_text: &str) {}
 
 #[derive(Debug, Clone)]
 struct SnailfishNumber {
@@ -40,10 +49,11 @@ impl Add for SnailfishNumber {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
-        Self {
+        let p = Self {
             v1: Value::Pair(Box::new(self)),
             v2: Value::Pair(Box::new(other)),
-        }
+        };
+        p.reduce()
     }
 }
 
@@ -53,8 +63,18 @@ impl SnailfishNumber {
 
         loop {
             //explode until you can't anymore
-            while p.explode() {}
+            let mut v = Self::to_str(p);
+            while Self::explode_str(&mut v) {}
 
+            /*
+            println!("Convert back after exploding");
+            for c in &v {
+                print!("{}", c);
+            }
+            println!();*/
+
+            //convert back to pair notation to split
+            p = Self::from_slice(&v);
             //done exploding, and can't split, reduction complete
             if !p.split() {
                 break;
@@ -64,21 +84,113 @@ impl SnailfishNumber {
         p
     }
 
-    fn explode(&mut self) -> bool {
-        let mut left: Option<&i32> = None;
-        let mut right: Option<&i32> = None;
+    fn explode_str(input: &mut Vec<char>) -> bool {
+        let mut stack = Vec::new();
+        let mut do_explode = false;
+        let mut pair_i = 0;
 
-        let mut depth = 0;
+        /*
+        for c in input.iter() {
+            print!("{}", c);
+        }
+        println!();*/
 
-        let mut stack: Vec<&mut Self> = Vec::new();
-        stack.push(self);
+        for (i, c) in input[..].iter().enumerate() {
+            match c {
+                '[' => {
+                    //do explode, now that we found the start of the point to do so on.
+                    if stack.len() == 4 {
+                        pair_i = i;
+                        do_explode = true;
+                        break;
+                    } else {
+                        stack.push(i);
+                    }
+                }
 
-        while !stack.is_empty() {
-            let pointer = stack.pop();
-            depth += 1;
+                ']' => {
+                    stack.pop();
+                }
+
+                _ => (),
+            };
         }
 
-        true
+        if do_explode {
+            let mut iend = pair_i + 1;
+            while input[iend] != ']' {
+                iend += 1;
+            }
+            //println!("Making pair to explode: {:?} {} {}", input, pair_i, iend);
+            let p = Self::from_slice(&input[pair_i..=iend]);
+
+            //Handle right, then current location, then left, to avoid modifying
+            //indices as values move
+
+            //find locatin of next number
+            let mut righti = iend;
+            while !input[righti].is_digit(10) {
+                righti += 1;
+                if righti == input.len() - 1 {
+                    break;
+                }
+            }
+
+            //add to right
+            if righti != input.len() - 1 {
+                let mut rightend = righti + 1;
+                while input[rightend].is_digit(10) {
+                    rightend += 1;
+                }
+                let right: i32 = input[righti..rightend]
+                    .iter()
+                    .collect::<String>()
+                    .parse()
+                    .unwrap();
+                let newrightv = right
+                    + match p.v2 {
+                        Value::Val(v) => v,
+                        Value::Pair(_) => panic!("exploded pair with pair left side"),
+                    };
+
+                input.splice(righti..rightend, newrightv.to_string().chars());
+            }
+
+            //Replace current pair with a '0'
+            input[pair_i] = '0';
+            input.drain(pair_i + 1..=iend);
+
+            //find location of previous number
+            let mut lefti = pair_i - 1;
+            while !input[lefti].is_digit(19) {
+                lefti -= 1;
+                if lefti == 0 {
+                    break;
+                }
+            }
+
+            //lefti exists
+            if lefti != 0 {
+                let mut leftend = lefti - 1;
+                while input[leftend].is_digit(10) {
+                    leftend -= 1;
+                }
+                let left: i32 = input[leftend + 1..=lefti]
+                    .iter()
+                    .collect::<String>()
+                    .parse()
+                    .unwrap();
+                let newleftv = left
+                    + match p.v1 {
+                        Value::Val(v) => v,
+                        Value::Pair(_) => panic!("exploded pair with pair left side"),
+                    };
+
+                input.splice(leftend + 1..=lefti, newleftv.to_string().chars());
+            }
+        }
+
+        do_explode
     }
 
     fn split(&mut self) -> bool {
@@ -110,17 +222,6 @@ impl SnailfishNumber {
         false
     }
 
-    fn find_first_i(&mut self) -> &i32 {
-        let mut pointer = self;
-        loop {
-            match pointer.v1 {
-                Value::Val(ref mut i) => return i,
-
-                Value::Pair(ref mut b) => pointer = b,
-            }
-        }
-    }
-
     fn magnitude(&self) -> i32 {
         let left = match &self.v1 {
             Value::Val(i) => *i,
@@ -138,7 +239,7 @@ impl SnailfishNumber {
 
     fn from_slice(input: &[char]) -> Self {
         let mut s1 = input;
-        let mut s2 = input;
+        let mut s2: &[char] = &['0'; 0];
         let mut stack = Vec::new();
         for (i, c) in input[1..].iter().enumerate() {
             match c {
@@ -165,18 +266,37 @@ impl SnailfishNumber {
             };
         }
 
+        //println!("{:?} | {:?} | {:?}", input, s1, s2);
         let v1 = if s1[0].is_digit(10) {
-            Value::Val(s1.iter().collect::<String>().parse().unwrap())
+            Value::Val(i32::from_str_radix(&s1.iter().collect::<String>(), 10).unwrap())
         } else {
             Value::Pair(Box::new(Self::from_slice(s1)))
         };
 
         let v2 = if s2[0].is_digit(10) {
-            Value::Val(s2.iter().collect::<String>().parse().unwrap())
+            Value::Val(i32::from_str_radix(&s2.iter().collect::<String>(), 10).unwrap())
         } else {
             Value::Pair(Box::new(Self::from_slice(s2)))
         };
 
         Self { v1, v2 }
+    }
+
+    fn to_str(input: Self) -> Vec<char> {
+        let mut out = Vec::new();
+
+        out.push('[');
+        match input.v1 {
+            Value::Val(i) => out.extend_from_slice(&i.to_string().chars().collect::<Vec<char>>()),
+            Value::Pair(b) => out.append(&mut Self::to_str(*b)),
+        }
+        out.push(',');
+        match input.v2 {
+            Value::Val(i) => out.extend_from_slice(&i.to_string().chars().collect::<Vec<char>>()),
+            Value::Pair(b) => out.append(&mut Self::to_str(*b)),
+        }
+        out.push(']');
+
+        out
     }
 }
