@@ -82,13 +82,6 @@ impl SnailfishNumber {
             let mut v = Self::to_str(p);
             while Self::explode_str(&mut v) {}
 
-            /*
-            println!("Convert back after exploding");
-            for c in &v {
-                print!("{}", c);
-            }
-            println!();*/
-
             //convert back to pair notation to split
             p = Self::from_slice(&v);
             //done exploding, and can't split, reduction complete
@@ -104,12 +97,6 @@ impl SnailfishNumber {
         let mut stack = Vec::new();
         let mut do_explode = false;
         let mut pair_i = 0;
-
-        /*
-        for c in input.iter() {
-            print!("{}", c);
-        }
-        println!();*/
 
         for (i, c) in input[..].iter().enumerate() {
             match c {
@@ -282,7 +269,6 @@ impl SnailfishNumber {
             };
         }
 
-        //println!("{:?} | {:?} | {:?}", input, s1, s2);
         let v1 = if s1[0].is_digit(10) {
             Value::Val(i32::from_str_radix(&s1.iter().collect::<String>(), 10).unwrap())
         } else {
