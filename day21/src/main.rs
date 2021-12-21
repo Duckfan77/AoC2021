@@ -153,6 +153,7 @@ impl GameDirac {
         }
     }
 
+    //wrapper to call move1 or move2, depending on the p1 flag
     fn moven(&mut self, mv: i32, p1: bool) -> bool {
         if p1 {
             self.move1(mv)
@@ -202,6 +203,7 @@ impl Game2 {
         }
     }
 
+    //steps all boards for player 1 if p1 is true, steps all boards for player 2 if p1 is false
     fn step(&mut self, p1: bool) {
         let mut newgames = HashMap::new();
 
