@@ -39,6 +39,7 @@ fn part2() {
     }
 }
 
+//part 1 infrastructure
 trait Die {
     fn roll(&mut self) -> i32;
 }
@@ -131,6 +132,7 @@ impl Game {
     }
 }
 
+//part 2 infrastructure
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 struct GameDirac {
     p1score: i32,
