@@ -1,3 +1,4 @@
+use rayon::prelude::*;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
@@ -41,32 +42,37 @@ fn part1(text: &str) {
         );
     }*/
 
-    loop {
-        if num % 1_000_000 == 0 {
-            println!("num: {}", num);
-        }
+    let all: Vec<i64> = (0..num)
+        .into_par_iter()
+        .map(|num| {
+            if num % 1_000_000 == 0 {
+                println!("num: {}", num);
+            }
 
-        let mut arr = int_to_vec(num);
+            let arr = int_to_vec(num);
+            (num, arr)
+        })
+        .filter(|(_, arr)| !arr.contains(&0))
+        .map(|(i, mut arr)| {
+            let mut alu = Alu::new();
 
-        //we need the largest without a zero in it, so skip them
-        if arr.contains(&0) {
-            num -= 1;
-            continue;
-        }
+            for op in &instr {
+                op.execute(&mut alu, &mut arr);
+            }
 
-        let mut alu = Alu::new();
+            (i, alu.done())
+        })
+        .filter_map(|(i, done)| if done { Some(i) } else { None })
+        .collect();
 
-        for op in &instr {
-            op.execute(&mut alu, &mut arr);
-        }
+    println!("{:#?}", all);
 
-        if alu.done() {
-            break;
-        }
-        num -= 1;
-    }
-
-    println!("{}", num);
+    println!(
+        "min: {}, max: {}, len: {}",
+        all.iter().min().unwrap(),
+        all.iter().max().unwrap(),
+        all.len(),
+    );
 }
 
 fn part2(text: &str) {}
@@ -190,8 +196,9 @@ impl Op {
 }
 
 fn int_to_vec(int: i64) -> Vec<i64> {
-    int.to_string()
-        .chars()
+    let s = format!("{:0>14}", int);
+
+    s.chars()
         .map(|c| String::from(c).parse::<i64>().unwrap())
         .rev()
         .collect()
